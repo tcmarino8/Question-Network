@@ -1,83 +1,4 @@
 
-// import './App.css';
-// import React, { useEffect, useState } from 'react';
-// import ForceGraph3D from 'react-force-graph-3d';
-// import neo4j from 'neo4j-driver';
-
-// // ⚡ Connect to Neo4j database (Update with your credentials)
-// const driver = neo4j.driver(
-//   'neo4j+s://ae4595f1.databases.neo4j.io',
-//   neo4j.auth.basic(
-//      'neo4j',
-//      'ya2GCDsdQW4Vm3nhNTccxfgsNjpO6sDUFC3dMAtP6rU',
-//   ));
-
-
-
-// function App() {
-//   // ✅ Use state for Gdata to trigger re-renders
-//   const [graphData, setGraphData] = useState({
-//     nodes: [{ id: 'Question-Node', name: 'Question' }],
-//     links: []
-//   });
-//   const [selectedNode, setSelectedNode] = useState(null);
-
-
-  
-//   function handleNodeClick(node) {
-//     setSelectedNode(node.id); // Store selected node ID
-//     alert(`Selected target node: ${node.name}`);
-//   }
-
-//   function addNode() {
-//     if (!selectedNode) {
-//       alert("Please select a target node first.");
-//       return;
-//     }
-
-//     const input_name = prompt("Enter new node name:");
-//     if (!input_name) return;
-
-//     const input_id = prompt("Enter new node ID:");
-//     if (!input_id) return;
-
-//     let input_type = prompt("Is this an 'agree' or 'disagree' node?").toLowerCase();
-//     if (!["agree", "disagree"].includes(input_type)) {
-//       alert("Invalid input. Please enter 'agree' or 'disagree'.");
-//       return;
-//     }
-
-//     const input_color = input_type === "agree" ? "green" : "red";
-
-//     setGraphData(prevData => ({
-//       nodes: [...prevData.nodes, { id: input_id, name: input_name, color: input_color }],
-//       links: [...prevData.links, { source: input_id, target: selectedNode }]
-//     }));
-
-    
-//     }
-
-
-  
-
-//   return (
-//     <div className="App">
-//       <button onClick={addNode} style={{ margin: '10px', padding: '10px' }}>
-//         Add Node
-//       </button>
-//       <ForceGraph3D
-//         graphData={graphData}
-//         nodeAutoColorBy="color"
-//         nodeLabel="name"
-//         onNodeClick={handleNodeClick} // Selects a target node when clicked
-//       />
-//     </div>
-
-//   );
-// }
-
-// export default App;
-
 import './App.css';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
@@ -98,6 +19,9 @@ function App() {
     links: []
   });
   const [selectedNode, setSelectedNode] = useState(null);
+  const [showChoice, setShowChoice] = useState(false);
+  const [pendingNode, setPendingNode] = useState(null);
+
   const fgRef = useRef(null); // Reference to ForceGraph3D instance
 
 
@@ -115,7 +39,7 @@ function App() {
   // Handle node click (select node + zoom to node)
   const handleNodeClick = useCallback((node) => {
     setSelectedNode(node.id);
-    alert(`Selected target node: ${node.name}`);
+    // alert(`Selected target node: ${node.name}`);
 
     // Ensure zooming does not reset graph data
     if (fgRef.current) {
@@ -143,21 +67,44 @@ function App() {
     const input_id = prompt("Enter new node ID:");
     if (!input_id) return;
 
-    let input_type = prompt("Is this an 'agree' or 'disagree' node?").toLowerCase();
-    if (!["agree", "disagree"].includes(input_type)) {
-      alert("Invalid input. Please enter 'agree' or 'disagree'.");
-      return;
-    }
+    setPendingNode({ id: input_id, name: input_name });
+    setShowChoice(true); // Show choice buttons
+  }
 
-    const input_color = input_type === "agree" ? "green" : "red";
+  // Handles agree/disagree selection
+  function handleChoice(choice) {
+    if (!pendingNode) return;
+
+    const input_color = choice === "agree" ? "green" : "red";
 
     setGraphData(prevData => ({
-      nodes: [...prevData.nodes, { id: input_id, name: input_name, color: input_color }],
-      links: [...prevData.links, { source: selectedNode, target: input_id }]
+      nodes: [...prevData.nodes, { ...pendingNode, color: input_color }],
+      links: [...prevData.links, { source: selectedNode, target: pendingNode.id }]
     }));
+
+    setShowChoice(false);
+    setPendingNode(null);
+    setSelectedNode(null);
+
     // Reset zoom after adding a node
     setTimeout(() => resetZoom(), 500);
   }
+
+  //   let input_type = prompt("Is this an 'agree' or 'disagree' node?").toLowerCase();
+  //   if (!["agree", "disagree"].includes(input_type)) {
+  //     alert("Invalid input. Please enter 'agree' or 'disagree'.");
+  //     return;
+  //   }
+
+  //   const input_color = input_type === "agree" ? "green" : "red";
+
+  //   setGraphData(prevData => ({
+  //     nodes: [...prevData.nodes, { id: input_id, name: input_name, color: input_color }],
+  //     links: [...prevData.links, { source: selectedNode, target: input_id, color: input_color }]
+  //   }));
+  //   // Reset zoom after adding a node
+  //   setTimeout(() => resetZoom(), 500);
+  // }
 
   return (
     <div className="App">
@@ -167,6 +114,13 @@ function App() {
       <button onClick={resetZoom} style={{ margin: '10px', padding: '10px' }}>
         See Entire Network
       </button>
+      {showChoice && (
+        <div className="choice-popup">
+          <p>Do you Agree or Disagree with "{selectedNode.name}"?</p>
+          <button onClick={() => handleChoice("agree")} style={{ backgroundColor: "green", margin: '5px', padding: '10px' }}>Agree</button>
+          <button onClick={() => handleChoice("disagree")} style={{ backgroundColor: "red", margin: '5px', padding: '10px' }}>Disagree</button>
+        </div>
+      )}
       <ForceGraph3D
         ref={fgRef}
         graphData={graphData}
