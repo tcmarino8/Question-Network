@@ -1,23 +1,15 @@
-import logo from './logo.svg';
-import './App.css';
 
-function App() {
+import './App.css';
+import ForceGraph3D from 'react-force-graph-3d';
+
+
+const Gdata = {nodes: [{id:'Question-Node', name: 'Question'}, {id: 'Agree', name: 'Agree', color: 'green'}], 
+links: [{source:"Question-Node", target:"Agree"}]};
+
+function App({driver}) {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <ForceGraph3D graphData = {Gdata}/>
     </div>
   );
 }

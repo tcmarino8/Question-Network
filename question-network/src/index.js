@@ -2,16 +2,24 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import* as neo4j from 'neo4j-driver';
+
+const driver = neo4j.driver(
+  process.env.NEO4J_URI || 'neo4j+s://ae4595f1.databases.neo4j.io',
+  neo4j.auth.basic(
+    process.env.NEO4J_USER || 'neo4j',
+    process.env.NEO4J_PASSWORD || 'ya2GCDsdQW4Vm3nhNTccxfgsNjpO6sDUFC3dMAtP6rU',
+  ),
+  {}
+
+)
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <App driver = {driver}/>
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+
