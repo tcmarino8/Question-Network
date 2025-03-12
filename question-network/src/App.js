@@ -79,7 +79,7 @@ function App() {
 
     setGraphData(prevData => ({
       nodes: [...prevData.nodes, { ...pendingNode, color: input_color }],
-      links: [...prevData.links, { source: selectedNode, target: pendingNode.id }]
+      links: [...prevData.links, { source: selectedNode, target: pendingNode.id , color : input_color}]
     }));
 
     setShowChoice(false);
@@ -126,6 +126,7 @@ function App() {
         graphData={graphData}
         nodeAutoColorBy="color"
         nodeLabel="name"
+        linkColor='color'
         onNodeClick={handleNodeClick} // Selects a target node and zooms into it
       />
     </div>
