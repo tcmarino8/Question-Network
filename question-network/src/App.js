@@ -1,8 +1,8 @@
-
 import './App.css';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import neo4j from 'neo4j-driver';
+import ConnectionsPanel from './components/ConnectionsPanel';
 
 // ⚡ Connect to Neo4j database (Update with your credentials)
 const driver = neo4j.driver(
@@ -129,6 +129,7 @@ function App() {
         linkColor='color'
         onNodeClick={handleNodeClick} // Selects a target node and zooms into it
       />
+      <ConnectionsPanel selectedNode={selectedNode} graphData={graphData} />
     </div>
   );
 }
