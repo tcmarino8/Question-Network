@@ -15,41 +15,38 @@ const driver = neo4j.driver(
 
 function App() {
   const [graphData, setGraphData] = useState({
-    nodes: [{ id: 'Question-Node', name: 'Question', color: 'blue' }],
+    nodes: [{ id: 'Question-Node', name: 'Question', color: 'blue', x: 0, y: 0, z: 0 }],
     links: []
   });
   const [selectedNode, setSelectedNode] = useState(null);
   const [showChoice, setShowChoice] = useState(false);
   const [pendingNode, setPendingNode] = useState(null);
 
-  const fgRef = useRef(null); // Reference to ForceGraph3D instance
+  const fgRef = useRef(null);
 
-
-    // Function to reset zoom
-    const resetZoom = useCallback(() => {
-      if (fgRef.current) {
-        fgRef.current.cameraPosition(
-          { x: 0, y: 0, z: 500 }, // Reset to default position
-          { x: 0, y: 0, z: 0 }, // Look at graph center
-          1500  // Smooth transition
-        );
-      }
-    }, []);
+  // Function to reset zoom
+  const resetZoom = useCallback(() => {
+    if (fgRef.current) {
+      fgRef.current.cameraPosition(
+        { x: 0, y: 0, z: 500 },
+        { x: 0, y: 0, z: 0 },
+        1500
+      );
+    }
+  }, []);
 
   // Handle node click (select node + zoom to node)
   const handleNodeClick = useCallback((node) => {
     setSelectedNode(node.id);
-    // alert(`Selected target node: ${node.name}`);
 
-    // Ensure zooming does not reset graph data
     if (fgRef.current) {
-      const distance = 20; // Adjust zoom level
+      const distance = 20;
       const distRatio = 1 + distance / Math.hypot(node.x || 1, node.y || 1, node.z || 1);
 
       fgRef.current.cameraPosition(
-        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // New camera position
-        node,  // Look at the selected node
-        3000   // Smooth transition
+        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+        node,
+        3000
       );
     }
   }, []);
@@ -68,7 +65,7 @@ function App() {
     if (!input_id) return;
 
     setPendingNode({ id: input_id, name: input_name });
-    setShowChoice(true); // Show choice buttons
+    setShowChoice(true);
   }
 
   // Handles agree/disagree selection
@@ -76,10 +73,33 @@ function App() {
     if (!pendingNode) return;
 
     const input_color = choice === "agree" ? "green" : "red";
+    
+    // Find the selected node's position
+    const selectedNodeObj = graphData.nodes.find(n => n.id === selectedNode);
+    const baseX = selectedNodeObj ? selectedNodeObj.x : 0;
+    
+    // Calculate new node position based on agreement
+    // Agree nodes go to the right, disagree nodes to the left
+    const xOffset = choice === "agree" ? 100 : -100;
+    const newX = baseX + xOffset;
+    
+    // Add some random variation to y and z to prevent nodes from stacking
+    const newY = (Math.random() - 0.5) * 50;
+    const newZ = (Math.random() - 0.5) * 50;
 
     setGraphData(prevData => ({
-      nodes: [...prevData.nodes, { ...pendingNode, color: input_color }],
-      links: [...prevData.links, { source: selectedNode, target: pendingNode.id , color : input_color}]
+      nodes: [...prevData.nodes, { 
+        ...pendingNode, 
+        color: input_color,
+        x: newX,
+        y: newY,
+        z: newZ
+      }],
+      links: [...prevData.links, { 
+        source: selectedNode, 
+        target: pendingNode.id,
+        color: input_color
+      }]
     }));
 
     setShowChoice(false);
@@ -89,22 +109,6 @@ function App() {
     // Reset zoom after adding a node
     setTimeout(() => resetZoom(), 500);
   }
-
-  //   let input_type = prompt("Is this an 'agree' or 'disagree' node?").toLowerCase();
-  //   if (!["agree", "disagree"].includes(input_type)) {
-  //     alert("Invalid input. Please enter 'agree' or 'disagree'.");
-  //     return;
-  //   }
-
-  //   const input_color = input_type === "agree" ? "green" : "red";
-
-  //   setGraphData(prevData => ({
-  //     nodes: [...prevData.nodes, { id: input_id, name: input_name, color: input_color }],
-  //     links: [...prevData.links, { source: selectedNode, target: input_id, color: input_color }]
-  //   }));
-  //   // Reset zoom after adding a node
-  //   setTimeout(() => resetZoom(), 500);
-  // }
 
   return (
     <div className="App">
@@ -116,7 +120,7 @@ function App() {
       </button>
       {showChoice && (
         <div className="choice-popup">
-          <p>Do you Agree or Disagree with "{selectedNode.name}"?</p>
+          <p>Do you Agree or Disagree with "{selectedNode}"?</p>
           <button onClick={() => handleChoice("agree")} style={{ backgroundColor: "green", margin: '5px', padding: '10px' }}>Agree</button>
           <button onClick={() => handleChoice("disagree")} style={{ backgroundColor: "red", margin: '5px', padding: '10px' }}>Disagree</button>
         </div>
@@ -127,7 +131,11 @@ function App() {
         nodeAutoColorBy="color"
         nodeLabel="name"
         linkColor='color'
-        onNodeClick={handleNodeClick} // Selects a target node and zooms into it
+        onNodeClick={handleNodeClick}
+        enableNodeDrag={true}
+        enableNodeRelabel={true}
+        enableNavigationControls={true}
+        enablePointerInteraction={true}
       />
       <ConnectionsPanel selectedNode={selectedNode} graphData={graphData} />
     </div>
